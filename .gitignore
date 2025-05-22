@@ -1,0 +1,43 @@
+# Python 캐시 및 체크포인트
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.ipynb_checkpoints/
+
+# 로그 및 런타임 파일
+*.log
+*.pid
+*.sock
+
+# Docker 관련 파일
+*.db
+*.sqlite3
+
+# IDE 설정 및 OS 시스템 파일
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# 환경 설정
+.env
+
+# sender_api 내부 received_data 경로 - 구조는 유지하고 파일만 무시
+sender_api/received_data/*
+!sender_api/received_data/
+!sender_api/received_data/audio/
+!sender_api/received_data/video/
+!sender_api/received_data/audio/.gitkeep
+!sender_api/received_data/video/.gitkeep
+
+# 미디어 및 결과 파일 확장자 예외 처리 (예방용)
+*.wav
+*.pcm
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.avi
+*.json
+

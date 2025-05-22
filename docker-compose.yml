@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  yolo:
+    build: ./yolo
+    container_name: yolo-container
+    devices:
+      - "/dev/video0:/dev/video0"  # 호스트의 웹캠 장치를 컨테이너에 연결
+    restart: unless-stopped
+
+  sed:
+    build: ./sed
+    container_name: sed-container
+    devices:
+      - "/dev/snd:/dev/snd"
+    group_add:
+      - audio
+    restart: unless-stopped
+
+  sender-api:
+    build: ./sender_api
+    container_name: sender-api
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    volumes:
+      - ./sender_api/received_data:/app/received_data

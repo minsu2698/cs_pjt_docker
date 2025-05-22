@@ -1,4 +1,4 @@
-# cs_pjt: Real-Time YOLO + SED Edge Inference System
+# CS_PJT: Real-Time YOLO + SED Edge Inference System
 
 ## 📌 프로젝트 개요
 

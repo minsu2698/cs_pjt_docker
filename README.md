@@ -15,7 +15,7 @@
 
 ## 📂 디렉토리 구조
 
-\`\`\`
+```
 cs_pjt/
 ├── docker-compose.yml               # 전체 오케스트레이션
 ├── .gitignore
@@ -29,7 +29,7 @@ cs_pjt/
 │   └── received_data/
 │       ├── audio/                   # SED 오디오 저장 (10초 단위)
 │       └── video/                   # YOLO 이미지 저장 (실시간 프레임)
-\`\`\`
+```
 
 ---
 
@@ -37,9 +37,9 @@ cs_pjt/
 
 ### 1. Docker Compose 실행
 
-\`\`\`bash
+```bash
 docker-compose up --build
-\`\`\`
+```
 
 > YOLO 및 SED 컨테이너가 자동 실행되며, sender_api가 8000 포트에서 수신 대기합니다.
 
@@ -47,11 +47,11 @@ docker-compose up --build
 
 ## 🔁 데이터 흐름
 
-\`\`\`text
+```text
 [YOLO container]       ─────┐
                            ├─>  sender_api  ──>  저장 + 외부 전송
 [SED container]  (10초 단위) ┘
-\`\`\`
+```
 
 - `/stream`: YOLO 이미지 실시간 POST
 - `/upload`: 오디오 결과 + 메타데이터 POST

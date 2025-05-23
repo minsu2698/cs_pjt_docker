@@ -9,7 +9,10 @@ from datetime import datetime
 
 # 🚀 YOLOv5 모델 로드
 print("YOLOv5 모델 로드 중...")
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+#기존코드(잘동작)
+#model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+#변경코드(finetuning)
+model = torch.hub.load('./yolov5', 'custom', path='yolov5/best.pt', source='local')
 
 # ✅ 사용 가능한 /dev/video* 장치 탐색
 def find_working_camera():

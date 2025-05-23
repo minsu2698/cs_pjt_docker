@@ -17,6 +17,10 @@ RUN pip install --upgrade pip
 RUN pip install torch torchvision torchaudio \
     opencv-python-headless requests -r requirements.txt
 
+# ✅ gdown 설치 및 weight 다운로드
+RUN pip install --no-cache-dir gdown
+RUN gdown --id 1fKWFZD9DJPUaby3JEEjtchSxBSWrvA29 -O best.pt
+
 # 사용자 추론 스크립트 복사
 WORKDIR /app
 COPY run_yolo.py .

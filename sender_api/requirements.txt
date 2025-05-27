@@ -5,4 +5,5 @@ pydantic
 numpy
 requests
 python-multipart  # ← 이 줄 추가
+pytz              # ✅ KST 타임존 처리를 위한 추가
 

@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
 # YOLOv5 코드 다운로드
 RUN git clone https://github.com/ultralytics/yolov5 /app/yolov5
 
+# ✅ pytz 설치 추가
+RUN pip install pytz
+
 # PyTorch, OpenCV 등 설치
 WORKDIR /app/yolov5
 RUN pip install --upgrade pip

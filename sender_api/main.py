@@ -179,13 +179,13 @@ async def receive_audio(file: UploadFile = File(...)):
 
         print(f"🎧 수신된 오디오 길이: {len(audio_np)}, 예시: {audio_np[:10]}")
 
-        # # ✅ 노트북으로 전송
-        # try:
-        #     files = {'file': (f"audio_{timestamp}.wav", data, 'audio/wav')}
-        #     res = requests.post(f"{NOTEBOOK_SERVER_URL}/sed", files=files)
-        #     print("📤 노트북으로 오디오 전송 완료 → 상태:", res.status_code)
-        # except Exception as e:
-        #     print("⚠️ 노트북 전송 실패 (/sed):", e)
+        # ✅ 노트북으로 전송
+        try:
+            files = {'file': (f"audio_{timestamp}.wav", data, 'audio/wav')}
+            res = requests.post(f"{NOTEBOOK_SERVER_URL}/sed", files=files)
+            print("📤 노트북으로 오디오 전송 완료 → 상태:", res.status_code)
+        except Exception as e:
+            print("⚠️ 노트북 전송 실패 (/sed):", e)
 
         return {
             "status": "received",
@@ -235,14 +235,14 @@ async def receive_yolo_trigger(json_str: str = Form(...), image: UploadFile = Fi
 
         print(f"📦 YOLO 이벤트 저장 완료: {img_path}, {meta_path}")
 
-        # # ✅ 노트북으로 전송 (옵션)
-        # try:
-        #     files = {"image": open(img_path, "rb")}
-        #     json_data = {"json": json.dumps(data)}
-        #     notebook_res = requests.post(f"{NOTEBOOK_SERVER_URL}/yolo", data=json_data, files=files)
-        #     print("📤 노트북으로 이벤트 전송 완료 → 상태:", notebook_res.status_code)
-        # except Exception as e:
-        #     print("⚠️ 노트북 전송 실패 (/yolo):", e)
+        # ✅ 노트북으로 전송 (옵션)
+        try:
+            files = {"image": open(img_path, "rb")}
+            json_data = {"json_str": json.dumps(data)}  # ✅ Core의 Form 필드명과 일치
+            notebook_res = requests.post(f"{NOTEBOOK_SERVER_URL}/yolo", data=json_data, files=files)
+            print("📤 노트북으로 이벤트 전송 완료 → 상태:", notebook_res.status_code)
+        except Exception as e:
+            print("⚠️ 노트북 전송 실패 (/yolo):", e)
 
         return {
             "status": "success",

@@ -140,16 +140,30 @@ KST = pytz.timezone("Asia/Seoul")  # ✅ 추가
 
 app = FastAPI()
 
+# # 📁 저장 경로 설정
+# BASE_DIR = "received_data"
+# AUDIO_DIR = os.path.join(BASE_DIR, "audio")
+# IMAGE_DIR = os.path.join(BASE_DIR, "image")
+# META_DIR = os.path.join(BASE_DIR, "metadata")
+
+# os.makedirs(AUDIO_DIR, exist_ok=True)
+# os.makedirs(IMAGE_DIR, exist_ok=True)
+# os.makedirs(META_DIR, exist_ok=True)
+
 # 📁 저장 경로 설정
 BASE_DIR = "received_data"
-AUDIO_DIR = os.path.join(BASE_DIR, "audio")
+
+# YOLO
 IMAGE_DIR = os.path.join(BASE_DIR, "image")
-META_DIR = os.path.join(BASE_DIR, "metadata")
+IMAGE_META_DIR = os.path.join(IMAGE_DIR, "metadata_image")  # ✅ 올바른 방식
 
-os.makedirs(AUDIO_DIR, exist_ok=True)
-os.makedirs(IMAGE_DIR, exist_ok=True)
-os.makedirs(META_DIR, exist_ok=True)
+# SED
+AUDIO_DIR = os.path.join(BASE_DIR, "audio")
+AUDIO_META_DIR = os.path.join(AUDIO_DIR, "meta_audio")  # ✅ 올바른 방식
 
+# 폴더 자동 생성
+for folder in [IMAGE_DIR, IMAGE_META_DIR, AUDIO_DIR, AUDIO_META_DIR]:
+    os.makedirs(folder, exist_ok=True)
 
 
 # 📡 노트북 FastAPI 수신 서버 주소
@@ -161,42 +175,94 @@ async def root():
 
 # ✅ 1. SED 오디오 수신
 @app.post("/sed")
-async def receive_audio(file: UploadFile = File(...)):
+# async def receive_audio(file: UploadFile = File(...)):
+#     try:
+#         data = await file.read()
+#         timestamp = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
+#         save_path = f"{AUDIO_DIR}/{timestamp}.wav"
+
+#         with open(save_path, "wb") as f:
+#             f.write(data)
+#         print(f"🔊 저장된 오디오: {save_path}")
+
+#         # 오디오 분석 로그
+#         wav_buffer = io.BytesIO(data)
+#         with wave.open(wav_buffer, 'rb') as wf:
+#             frames = wf.readframes(wf.getnframes())
+#             audio_np = np.frombuffer(frames, dtype=np.int16)
+
+#         print(f"🎧 수신된 오디오 길이: {len(audio_np)}, 예시: {audio_np[:10]}")
+
+#         # ✅ 노트북으로 전송
+#         # try:
+#         #     files = {'file': (f"audio_{timestamp}.wav", data, 'audio/wav')}
+#         #     res = requests.post(f"{NOTEBOOK_SERVER_URL}/sed", files=files)
+#         #     print("📤 노트북으로 오디오 전송 완료 → 상태:", res.status_code)
+#         # except Exception as e:
+#         #     print("⚠️ 노트북 전송 실패 (/sed):", e)
+
+#         return {
+#             "status": "received",
+#             "length": len(audio_np),
+#             "timestamp": time.time()
+#         }
+
+#     except Exception as e:
+#         print(f"❌ 오류 발생 (/sed): {e}")
+#         return {"status": "error", "detail": str(e)}
+async def receive_audio(json_str: str = Form(...), file: UploadFile = File(...)):
     try:
-        data = await file.read()
-        timestamp = datetime.now(KST).strftime('%Y%m%d_%H%M%S')
-        save_path = f"{AUDIO_DIR}/{timestamp}.wav"
+        # 1. JSON 파싱
+        payload = json_str.strip()
+        data = json.loads(payload)
 
-        with open(save_path, "wb") as f:
-            f.write(data)
-        print(f"🔊 저장된 오디오: {save_path}")
+        # 필수 필드 확인
+        required_fields = ["event_time", "event_type", "level", "class", "device_id"]
+        for field in required_fields:
+            if field not in data:
+                return JSONResponse(status_code=400, content={"error": f"Missing field: {field}"})
 
-        # 오디오 분석 로그
-        wav_buffer = io.BytesIO(data)
-        with wave.open(wav_buffer, 'rb') as wf:
-            frames = wf.readframes(wf.getnframes())
-            audio_np = np.frombuffer(frames, dtype=np.int16)
+        # 2. 파일 저장
+        raw = await file.read()
+        event_time = data["event_time"].replace(":", "-").replace(".", "-")
+        device_id = data["device_id"]
+        level = data["level"]
+        cls = data["class"]
+        filename_prefix = f"{event_time}_{device_id}_{cls}_{level}"
 
-        print(f"🎧 수신된 오디오 길이: {len(audio_np)}, 예시: {audio_np[:10]}")
+        wav_path = os.path.join(AUDIO_DIR, f"{filename_prefix}.wav")
+        meta_path = os.path.join(AUDIO_META_DIR, f"{filename_prefix}.json")
 
-        # ✅ 노트북으로 전송
+        with open(wav_path, "wb") as f:
+            f.write(raw)
+        print(f"🔊 저장된 오디오: {wav_path}")
+
+        with open(meta_path, "w") as f:
+            json.dump(data, f, indent=2)
+        print(f"📦 SED 메타 저장 완료: {meta_path}")
+
+        # 3. ✅ 노트북으로 전송 (YOLO와 동일한 구조)
         try:
-            files = {'file': (f"audio_{timestamp}.wav", data, 'audio/wav')}
-            res = requests.post(f"{NOTEBOOK_SERVER_URL}/sed", files=files)
-            print("📤 노트북으로 오디오 전송 완료 → 상태:", res.status_code)
+            files = {"file": open(wav_path, "rb")}
+            json_data = {"json_str": json.dumps(data)}
+            res = requests.post(f"{NOTEBOOK_SERVER_URL}/sed", data=json_data, files=files)
+            print("📤 노트북으로 이벤트 전송 완료 → 상태:", res.status_code)
         except Exception as e:
             print("⚠️ 노트북 전송 실패 (/sed):", e)
 
         return {
             "status": "received",
-            "length": len(audio_np),
-            "timestamp": time.time()
+            "filename": filename_prefix,
+            "audio_path": wav_path,
+            "metadata_path": meta_path
         }
 
     except Exception as e:
         print(f"❌ 오류 발생 (/sed): {e}")
-        return {"status": "error", "detail": str(e)}
-    
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+
 # ✅ 2. YOLO Trigger 이벤트 수신
 @app.post("/yolo")
 async def receive_yolo_trigger(json_str: str = Form(...), image: UploadFile = File(...)):
@@ -218,7 +284,7 @@ async def receive_yolo_trigger(json_str: str = Form(...), image: UploadFile = Fi
         filename_prefix = f"{event_time}_{device_id}_{cls}_{level}"
 
         img_path = os.path.join(IMAGE_DIR, f"{filename_prefix}.jpg")
-        meta_path = os.path.join(META_DIR, f"{filename_prefix}.json")
+        meta_path = os.path.join(IMAGE_META_DIR, f"{filename_prefix}.json")
 
         # 이미지 저장
         image.file.seek(0)  # 🔥 파일 포인터 초기화 필수

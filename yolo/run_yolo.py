@@ -109,6 +109,10 @@ from datetime import datetime
 import json
 import pytz
 
+# 맨 위에서 monkey patch
+import functools
+print = functools.partial(print, flush=True)
+
 KST = pytz.timezone("Asia/Seoul")
 
 

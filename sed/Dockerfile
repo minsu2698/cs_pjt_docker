@@ -17,5 +17,9 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY run_sed.py .
 
+# SED반영 KMS250528
+COPY model_utils.py .
+COPY SED.onnx .
+
 CMD ["python", "run_sed.py"]
 

@@ -1,3 +1,7 @@
 pyaudio
 numpy
 requests
+pytz
+torch
+librosa
+onnxruntime

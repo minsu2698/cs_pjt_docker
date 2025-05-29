@@ -153,7 +153,7 @@ os.makedirs(META_DIR, exist_ok=True)
 
 
 # 📡 노트북 FastAPI 수신 서버 주소
-NOTEBOOK_SERVER_URL = "http://192.168.67.61:8000"
+NOTEBOOK_SERVER_URL = "http://192.168.171.61:8000"
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -235,7 +235,7 @@ async def receive_yolo_trigger(json_str: str = Form(...), image: UploadFile = Fi
 
         print(f"📦 YOLO 이벤트 저장 완료: {img_path}, {meta_path}")
 
-        # ✅ 노트북으로 전송 (옵션)
+        #✅ 노트북으로 전송 (옵션)
         try:
             files = {"image": open(img_path, "rb")}
             json_data = {"json_str": json.dumps(data)}  # ✅ Core의 Form 필드명과 일치

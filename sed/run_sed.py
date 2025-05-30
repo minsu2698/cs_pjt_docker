@@ -148,7 +148,8 @@ TARGET_KEYWORDS = ["LifeChat", "Headset", "LX-3000"]
 WAV_DIR = "temp_audio"  # 🔐 SED 컨테이너 내부 임시 저장 디렉토리
 
 
-CONF_THRESH = 0.2
+#CONF_THRESH = 0.4
+CONF_THRESH = 0.4
 DEVICE_ID = "edge-A2"
 
 
@@ -176,24 +177,31 @@ if target_device_index is None:
     print("❌ USB 마이크를 찾을 수 없습니다. 종료합니다.")
     exit(1)
 
-# 🎧 샘플레이트 선택
-selected_rate = None
-for rate in CANDIDATE_RATES:
-    try:
-        print(f"🔍 샘플레이트 테스트 중: {rate}Hz")
-        test_stream = p.open(format=FORMAT, channels=CHANNELS, rate=rate,
-                             input=True, input_device_index=target_device_index,
-                             frames_per_buffer=CHUNK)
-        test_stream.close()
-        selected_rate = rate
-        print(f"✅ 성공: {rate}Hz")
-        break
-    except Exception as e:
-        print(f"❌ 실패: {rate}Hz / {e}")
+# # 🎧 샘플레이트 선택
+# selected_rate = None
+# for rate in CANDIDATE_RATES:
+#     try:
+#         print(f"🔍 샘플레이트 테스트 중: {rate}Hz")
+#         test_stream = p.open(format=FORMAT, channels=CHANNELS, rate=rate,
+#                              input=True, input_device_index=target_device_index,
+#                              frames_per_buffer=CHUNK)
+#         test_stream.close()
+#         selected_rate = rate
+#         print(f"✅ 성공: {rate}Hz")
+#         break
+#     except Exception as e:
+#         print(f"❌ 실패: {rate}Hz / {e}")
 
-if selected_rate is None:
-    selected_rate = 44100
-    print("⚠️ fallback으로 44100Hz 사용")
+# if selected_rate is None:
+#     selected_rate = 44100
+#     print("⚠️ fallback으로 44100Hz 사용")
+
+
+# 디바이스의 기본 샘플레이트 가져오기
+dev_info = p.get_device_info_by_index(target_device_index)
+default_rate = int(dev_info['defaultSampleRate'])
+selected_rate = default_rate
+print(f"✅ 디바이스의 기본 샘플레이트 사용: {default_rate}Hz")
 
 print(f"\n🎙️ 최종 설정: device_index={target_device_index}, rate={selected_rate}Hz")
 print("🎧 10초 단위로 수집 시작...")
@@ -232,12 +240,23 @@ while True:
     try:
         print("⏳ 녹음 중 (10초)...")
         frames = []
-        for _ in range(int(selected_rate / CHUNK * RECORD_SECONDS)):
+        # TEST중....
+        # for _ in range(int(selected_rate / CHUNK * RECORD_SECONDS)):
+        #     data = stream.read(CHUNK, exception_on_overflow=False)
+        #     np_data = np.frombuffer(data, dtype=np.int16)
+        #     #print("🧪 샘플 예시:", np_data[:10])
+        #     # _ = np_data[:10]  # 배열을 평가하지만 출력은 하지 않음
+        #     frames.append(data)
+
+        frames = []
+        start_time = time.time()
+        chunk_duration = CHUNK / selected_rate  # 초 단위, 약 0.023s
+
+        while time.time() - start_time < RECORD_SECONDS:
             data = stream.read(CHUNK, exception_on_overflow=False)
-            np_data = np.frombuffer(data, dtype=np.int16)
-            #print("🧪 샘플 예시:", np_data[:10])
-            # _ = np_data[:10]  # 배열을 평가하지만 출력은 하지 않음
             frames.append(data)
+            time.sleep(chunk_duration)  # 보정 sleep 추가
+
 
         audio_bytes = b''.join(frames)
         # # 🔍 디버깅용 로그 추가
